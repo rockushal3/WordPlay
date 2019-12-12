@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -17,10 +18,12 @@ public class CharactersAdapter extends RecyclerView.Adapter<CharactersAdapter.Ch
 
     Context context;
     private Character[] characterList;
+    EditText word;
 
-    public CharactersAdapter(Context context, Character[] characterList) {
+    public CharactersAdapter(Context context, Character[] characterList,EditText word) {
         this.context = context;
         this.characterList = characterList;
+        this.word = word;
     }
 
 
@@ -33,8 +36,21 @@ public class CharactersAdapter extends RecyclerView.Adapter<CharactersAdapter.Ch
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CharactersHolder holder, int position) {
-        holder.txtChar.setText(characterList[position]);
+    public void onBindViewHolder(@NonNull final CharactersHolder holder, final int position) {
+
+
+        holder.txtChar.setText(String.valueOf(characterList[position]));
+
+        holder.txtChar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            String setword = word.getText().toString() + characterList[position];
+            word.setText(setword);
+                holder.txtChar.setTextColor(context.getResources().getColor(R.color.colorBlack));
+                holder.txtChar.setBackgroundColor(context.getResources().getColor(R.color.colorGray));
+            holder.txtChar.setOnClickListener(null);
+            }
+        });
     }
 
 

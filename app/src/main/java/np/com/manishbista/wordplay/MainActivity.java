@@ -4,13 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
 
 import np.com.manishbista.wordplay.adapters.CharactersAdapter;
 
@@ -18,15 +23,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String[] words = {"enormity", "literally", "colonel", "lieutenant", "unabashed", "alcoholic"};
     private EditText etWord;
+    SharedPreferences sharedPreferences;
     private RecyclerView recyclerView;
-
+    TextView textView;
     private int level = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        textView =findViewById(R.id.leveltext);
         Button btnOK = findViewById(R.id.btnOK);
         Button btnClean = findViewById(R.id.btnClean);
         etWord = findViewById(R.id.etWord);
@@ -34,12 +40,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        listWords = findViewById(R.id.listWords);
 //        showWord(level);
+        SharedPreferences savedata = getSharedPreferences("Game", Context.MODE_PRIVATE);
+        if (savedata.getInt("Level",0)==0) {
+            showWord(level);
+        }
+        else {
+            level=savedata.getInt("Level",0);
+            showWord(level);
+        }
 
-
-        CharactersAdapter charactersAdapter = new CharactersAdapter(MainActivity.this, shuffleWords(level));
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 2);
-        recyclerView.setAdapter(charactersAdapter);
-        recyclerView.setLayoutManager(layoutManager);
 
         btnOK.setOnClickListener(this);
         btnClean.setOnClickListener(this);
@@ -53,8 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Character[] shuffleWords(int level){
-//        char[] word = words[level].toCharArray();
-        Character[] word = {'a', 'b', 'c'};
+        char[] word = words[level].toCharArray();
+
 
         ArrayList<Character> chars = new ArrayList<>(word.length);
         for(char c: word){
@@ -70,20 +79,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return shuffledWord;
     }
 
-//    private void showWord(int i){
-//        Character[] word = shuffleWords(words[i]);
-//        ArrayAdapter<Character> wordAdapter = new ArrayAdapter<>(MainActivity.this, R.layout.list_words, word);
-//        listWords.setAdapter(wordAdapter);
-//    }
+    private void showWord(int i){
+        CharactersAdapter charactersAdapter = new CharactersAdapter(MainActivity.this, shuffleWords(i),etWord);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 3);
+        recyclerView.setAdapter(charactersAdapter);
+        recyclerView.setLayoutManager(layoutManager);
+        textView.setText("GAME LEVEL : " + (i+1));
+    }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btnOK:
+                String usr_word = etWord.getText().toString();
+                if(level<words.length) {
+                    if (usr_word.equals(words[level])) {
+                        level++;
+                        showWord(level);
+                        sharedPreferences = getSharedPreferences("Game",MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("Level",level);
+                        editor.commit();
+                        etWord.setText("");
+                        Toast.makeText(MainActivity.this, "Next Level", Toast.LENGTH_SHORT).show();
+
+                    } else {
+                        Toast.makeText(MainActivity.this, "Wrong Word", Toast.LENGTH_SHORT).show();
+                        etWord.setText("");
+                        showWord(level);
+                    }
+                }
+                else {
+                    level=0;
+                    Toast.makeText(MainActivity.this, "Game Over", Toast.LENGTH_SHORT).show();
+                }
                 break;
 
             case R.id.btnClean:
                 etWord.getText().clear();
+                showWord(level);
                 break;
         }
     }
